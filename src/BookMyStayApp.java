@@ -1,68 +1,123 @@
 /**
  * Book My Stay App
- * Version 3.0
- * Demonstrates centralized room inventory using HashMap
+ * Version 4.0
+ * Demonstrates room search with read-only inventory access
  *
  * @author R. Shirley
- * @version 3.0
+ * @version 4.0
  */
 
-import java.util.HashMap;
+import java.util.*;
 
-// Inventory management class
+// -------- Room Domain Model --------
+abstract class Room {
+    protected String type;
+    protected int beds;
+    protected double price;
+
+    public Room(String type, int beds, double price) {
+        this.type = type;
+        this.beds = beds;
+        this.price = price;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void displayDetails() {
+        System.out.println("Room Type : " + type);
+        System.out.println("Beds      : " + beds);
+        System.out.println("Price     : ₹" + price);
+    }
+}
+
+class SingleRoom extends Room {
+    public SingleRoom() {
+        super("Single Room", 1, 2500);
+    }
+}
+
+class DoubleRoom extends Room {
+    public DoubleRoom() {
+        super("Double Room", 2, 4000);
+    }
+}
+
+class SuiteRoom extends Room {
+    public SuiteRoom() {
+        super("Suite Room", 3, 8000);
+    }
+}
+
+// -------- Inventory (State Holder) --------
 class RoomInventory {
 
     private HashMap<String, Integer> inventory;
 
-    // Constructor initializes room availability
     public RoomInventory() {
         inventory = new HashMap<>();
-
         inventory.put("Single Room", 5);
         inventory.put("Double Room", 3);
-        inventory.put("Suite Room", 2);
+        inventory.put("Suite Room", 0); // Example unavailable
     }
 
-    // Method to get availability
+    // Read-only access
     public int getAvailability(String roomType) {
         return inventory.getOrDefault(roomType, 0);
     }
+}
 
-    // Method to update availability
-    public void updateAvailability(String roomType, int count) {
-        inventory.put(roomType, count);
+// -------- Search Service --------
+class RoomSearchService {
+
+    private RoomInventory inventory;
+
+    public RoomSearchService(RoomInventory inventory) {
+        this.inventory = inventory;
     }
 
-    // Display inventory
-    public void displayInventory() {
-        System.out.println("Current Room Inventory:");
-        for (String roomType : inventory.keySet()) {
-            System.out.println(roomType + " : " + inventory.get(roomType));
+    public void searchRooms(List<Room> rooms) {
+
+        System.out.println("Available Rooms:\n");
+
+        for (Room room : rooms) {
+
+            int available = inventory.getAvailability(room.getType());
+
+            // Filter unavailable rooms
+            if (available > 0) {
+                room.displayDetails();
+                System.out.println("Available: " + available);
+                System.out.println("---------------------------");
+            }
         }
     }
 }
 
-// Main class
+// -------- Application Entry Point --------
 public class BookMyStayApp {
 
     public static void main(String[] args) {
 
         System.out.println("=================================");
         System.out.println("Book My Stay - Hotel Booking App");
-        System.out.println("Version 3.0");
+        System.out.println("Version 4.0");
         System.out.println("=================================\n");
 
         // Initialize inventory
         RoomInventory inventory = new RoomInventory();
 
-        // Display current inventory
-        inventory.displayInventory();
+        // Create room objects
+        List<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom());
+        rooms.add(new DoubleRoom());
+        rooms.add(new SuiteRoom());
 
-        // Example update
-        System.out.println("\nUpdating availability...\n");
-        inventory.updateAvailability("Single Room", 4);
+        // Search service
+        RoomSearchService searchService = new RoomSearchService(inventory);
 
-        // Display updated inventory
-        inventory.displayInventory();
+        // Perform search
+        searchService.searchRooms(rooms);
     }
 }
