@@ -1,90 +1,112 @@
-/**
- * Book My Stay App
- * Version 5.0
- * Demonstrates booking request handling using Queue (FIFO)
- *
- * @author R. Shirley
- * @version 5.0
- */
-
 import java.util.*;
 
-// -------- Reservation Class --------
+// Represents an optional service
+class AddOnService {
+    private String serviceName;
+    private double cost;
+
+    public AddOnService(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    @Override
+    public String toString() {
+        return serviceName + " (₹" + cost + ")";
+    }
+}
+
+// Represents a reservation (core entity remains unchanged)
 class Reservation {
-
+    private String reservationId;
     private String guestName;
-    private String roomType;
 
-    public Reservation(String guestName, String roomType) {
+    public Reservation(String reservationId, String guestName) {
+        this.reservationId = reservationId;
         this.guestName = guestName;
-        this.roomType = roomType;
+    }
+
+    public String getReservationId() {
+        return reservationId;
     }
 
     public String getGuestName() {
         return guestName;
     }
-
-    public String getRoomType() {
-        return roomType;
-    }
-
-    public void displayReservation() {
-        System.out.println("Guest Name : " + guestName);
-        System.out.println("Requested Room : " + roomType);
-    }
 }
 
-// -------- Booking Queue --------
-class BookingRequestQueue {
+// Manages add-on services for reservations
+class AddOnServiceManager {
 
-    private Queue<Reservation> requestQueue;
+    // Map: Reservation ID -> List of Services
+    private Map<String, List<AddOnService>> serviceMap;
 
-    public BookingRequestQueue() {
-        requestQueue = new LinkedList<>();
+    public AddOnServiceManager() {
+        serviceMap = new HashMap<>();
     }
 
-    // Add booking request
-    public void addRequest(Reservation reservation) {
-        requestQueue.add(reservation);
-        System.out.println("Booking request added for " + reservation.getGuestName());
+    // Add service to reservation
+    public void addService(String reservationId, AddOnService service) {
+        serviceMap.putIfAbsent(reservationId, new ArrayList<>());
+        serviceMap.get(reservationId).add(service);
     }
 
-    // Display all queued requests
-    public void displayRequests() {
+    // Get services for a reservation
+    public List<AddOnService> getServices(String reservationId) {
+        return serviceMap.getOrDefault(reservationId, new ArrayList<>());
+    }
 
-        System.out.println("\nBooking Requests in Queue (FIFO Order):\n");
+    // Calculate total add-on cost
+    public double calculateTotalCost(String reservationId) {
+        double total = 0.0;
+        List<AddOnService> services = serviceMap.get(reservationId);
 
-        for (Reservation r : requestQueue) {
-            r.displayReservation();
-            System.out.println("------------------------");
+        if (services != null) {
+            for (AddOnService service : services) {
+                total += service.getCost();
+            }
         }
+        return total;
     }
 }
 
-// -------- Main Application --------
+// Main class
 public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        System.out.println("=================================");
-        System.out.println("Book My Stay - Hotel Booking App");
-        System.out.println("Version 5.0");
-        System.out.println("=================================\n");
+        // Sample reservation (already created from previous use cases)
+        Reservation reservation = new Reservation("R101", "Rakshit");
 
-        // Initialize booking queue
-        BookingRequestQueue bookingQueue = new BookingRequestQueue();
+        // Add-on service manager
+        AddOnServiceManager manager = new AddOnServiceManager();
 
-        // Guest booking requests
-        Reservation r1 = new Reservation("Alice", "Single Room");
-        Reservation r2 = new Reservation("Bob", "Double Room");
-        Reservation r3 = new Reservation("Charlie", "Suite Room");
+        // Guest selects services
+        manager.addService(reservation.getReservationId(), new AddOnService("Breakfast", 500));
+        manager.addService(reservation.getReservationId(), new AddOnService("Airport Pickup", 1200));
+        manager.addService(reservation.getReservationId(), new AddOnService("Extra Bed", 800));
 
-        // Add requests to queue
-        bookingQueue.addRequest(r1);
-        bookingQueue.addRequest(r2);
-        bookingQueue.addRequest(r3);
+        // Fetch and display services
+        System.out.println("Reservation ID: " + reservation.getReservationId());
+        System.out.println("Guest Name: " + reservation.getGuestName());
 
-        // Display queue
-        bookingQueue.displayRequests();
+        System.out.println("\nSelected Add-On Services:");
+        List<AddOnService> services = manager.getServices(reservation.getReservationId());
+
+        for (AddOnService service : services) {
+            System.out.println("- " + service);
+        }
+
+        // Calculate total cost
+        double totalCost = manager.calculateTotalCost(reservation.getReservationId());
+        System.out.println("\nTotal Add-On Cost: ₹" + totalCost);
     }
 }
